@@ -27,6 +27,10 @@ type Pair = struct {
 	web.Controller
 }
 
+func (a *App) Plugs() *plugins.Plugins {
+	return a.plugins
+}
+
 func (a *App) Res() *web.Resources {
 	return a.resources
 }
