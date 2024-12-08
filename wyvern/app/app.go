@@ -18,6 +18,7 @@ func NewApp() *App {
 	return &App{
 		router:    *http.NewServeMux(),
 		resources: &web.Resources{},
+		plugins:   plugins.NewPlugins(),
 	}
 }
 
@@ -33,6 +34,7 @@ func (a *App) Res() *web.Resources {
 func (a *App) Group(pattern string, controllers []Pair, plugs []string) {
 	for _, pair := range controllers {
 		controller := pair.Controller
+		controller.SetRes(a.Res())
 		c_pattern := pair.String
 
 		full_pattern := fmt.Sprintf("%s%s", pattern, c_pattern)
@@ -42,7 +44,9 @@ func (a *App) Group(pattern string, controllers []Pair, plugs []string) {
 
 		for _, plugname := range plugs {
 			plug := a.plugins.Get(plugname)
-			middlewares = append(middlewares, plug.Poll)
+			if plug.IsPollable() {
+				middlewares = append(middlewares, plug.Poll(a.Res()))
+			}
 		}
 
 		finalHandler := chainMiddleware(http.HandlerFunc(handler), middlewares)
